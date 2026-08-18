@@ -33,9 +33,9 @@ export default function FocusTimer({
   const dashOffset = RING_CIRCUMFERENCE * (1 - progress);
 
   return (
-    <div className="liquid-glass rounded-3xl p-6 md:p-8">
-      <div className="mb-5 flex items-center justify-between">
-        <p className="text-xs uppercase tracking-widest text-[var(--txt-faint)]">
+    <div className="liquid-glass rounded-3xl p-4 md:p-8">
+      <div className="mb-4 flex items-center justify-between md:mb-5">
+        <p className="text-[10px] uppercase tracking-widest text-[var(--txt-faint)] md:text-xs">
           Focus timer
         </p>
         {running && (
@@ -51,7 +51,7 @@ export default function FocusTimer({
         )}
       </div>
 
-      <div className="relative mx-auto h-[148px] w-[148px] md:h-[164px] md:w-[164px]">
+      <div className="relative mx-auto h-[120px] w-[120px] md:h-[148px] md:w-[148px]">
         <svg
           viewBox="0 0 148 148"
           className="h-full w-full -rotate-90"
@@ -87,24 +87,24 @@ export default function FocusTimer({
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
-            className={`font-playfair text-4xl tracking-tight text-[var(--txt)] md:text-5xl ${
+            className={`font-playfair text-3xl tracking-tight text-[var(--txt)] md:text-5xl ${
               done ? "italic" : ""
             }`}
           >
             {done ? "Done" : formatTime(remaining)}
           </span>
-          <span className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[var(--txt-faint)]">
+          <span className="mt-0.5 hidden text-[10px] uppercase tracking-[0.2em] text-[var(--txt-faint)] md:mt-1 md:block">
             {done ? "Session complete" : "min : sec"}
           </span>
         </div>
       </div>
 
-      <div className="mt-6 flex justify-center gap-2.5">
+      <div className="mt-4 flex justify-center gap-1.5 md:mt-6 md:gap-2.5">
         {PRESETS.map((minutes) => (
           <button
             key={minutes}
             onClick={() => onSetDuration(minutes * 60)}
-            className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
+            className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all md:px-4 md:py-1.5 md:text-xs ${
               duration === minutes * 60 && !done
                 ? "bg-gradient-to-br from-[var(--acc-from)] via-[var(--acc-mid)] to-[var(--acc-to)] text-[var(--acc-txt)] shadow-[0_4px_16px_var(--glow)]"
                 : "bg-[var(--chip)] text-[var(--txt-soft)] hover:bg-[var(--btn-bg-hover)] hover:text-[var(--txt)]"
@@ -115,11 +115,11 @@ export default function FocusTimer({
         ))}
       </div>
 
-      <div className="mt-6 flex items-center justify-center gap-3">
+      <div className="mt-4 flex items-center justify-center gap-2 md:mt-6 md:gap-3">
         <button
           onClick={onToggle}
           disabled={done}
-          className={`flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium text-[var(--acc-txt)] shadow-[0_8px_24px_var(--glow)] transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+          className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-[var(--acc-txt)] shadow-[0_8px_24px_var(--glow)] transition-all md:gap-2 md:px-6 md:py-2.5 md:text-sm disabled:cursor-not-allowed disabled:opacity-40 ${
             running
               ? "bg-[var(--acc)] hover:brightness-110"
               : "bg-gradient-to-br from-[var(--acc-from)] via-[var(--acc-mid)] to-[var(--acc-to)] hover:brightness-110"
@@ -131,14 +131,15 @@ export default function FocusTimer({
         <button
           onClick={onReset}
           aria-label="Reset timer"
-          className="rounded-full bg-[var(--chip)] p-3 text-[var(--txt-soft)] transition-colors hover:bg-[var(--btn-bg-hover)] hover:text-[var(--txt)]"
+          className="rounded-full bg-[var(--chip)] p-2 text-[var(--txt-soft)] transition-colors hover:bg-[var(--btn-bg-hover)] hover:text-[var(--txt)] md:p-3"
         >
-          <RotateCcw size={15} />
+          <RotateCcw size={14} className="md:hidden" />
+          <RotateCcw size={15} className="hidden md:block" />
         </button>
       </div>
 
       {done && (
-        <p className="mt-5 text-center font-playfair text-sm italic text-[var(--acc)]">
+        <p className="mt-4 hidden text-center font-playfair text-sm italic text-[var(--acc)] md:mt-5 md:block">
           Session complete — nice focus. Pick a task or start again.
         </p>
       )}

@@ -190,6 +190,8 @@ export default function Page() {
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
   const [themeVideo, setThemeVideo] = useState(HERO_VIDEO_URL);
   const [selectedMood, setSelectedMood] = useState<MoodKey | null>(null);
+  const [showMobileTimer, setShowMobileTimer] = useState(false);
+  const [showMobileTodo, setShowMobileTodo] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -348,7 +350,7 @@ export default function Page() {
         onEnded={nextTrack}
       />
 
-      <section className="relative h-screen overflow-hidden bg-sky-night">
+      <section className="relative h-dvh overflow-hidden overscroll-none bg-sky-night">
         <VantaClouds
           className="pointer-events-none absolute inset-0"
           theme={selectedTheme ?? "classic"}
@@ -372,7 +374,7 @@ export default function Page() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative z-10 flex h-full flex-col items-center justify-between px-6 py-16 md:py-24"
+            className="relative z-10 flex h-full flex-col items-center justify-between px-6 py-10 md:py-24"
           >
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -407,10 +409,10 @@ export default function Page() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
-              className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 p-6"
+              className="absolute inset-0 z-20 flex items-center justify-center bg-black/70"
             >
-              <div className="w-full max-w-4xl">
-                <h2 className="text-center text-3xl tracking-tight text-white md:text-5xl">
+              <div className="w-full max-w-4xl p-4 py-6 md:p-6">
+                <h2 className="text-center text-xl tracking-tight text-white md:text-5xl">
                   Choose your{" "}
                   <em
                     className="text-white/40"
@@ -420,15 +422,19 @@ export default function Page() {
                   </em>
                 </h2>
 
-                <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-                  {THEMES.map((t) => (
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-6">
+                  {THEMES.map((t, i) => (
                     <motion.button
                       key={t.key}
                       onClick={() => setSelectedTheme(t.key)}
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, ease: EASE }}
-                      className={`group relative overflow-hidden rounded-3xl text-left transition-all ${
+                      className={`group relative overflow-hidden rounded-2xl text-left transition-all md:rounded-3xl ${
+                        i === 2
+                          ? "col-span-2 mx-auto w-[calc(50%-4px)] sm:col-span-1 sm:mx-0 sm:w-auto md:col-span-1"
+                          : ""
+                      } ${
                         selectedTheme === t.key
                           ? "ring-2 ring-primary"
                           : "ring-1 ring-white/10 hover:ring-white/30"
@@ -444,9 +450,17 @@ export default function Page() {
                           playsInline
                           preload="auto"
                         />
-                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <span className="absolute left-2 top-1.5 text-[9px] font-medium tracking-tight text-white drop-shadow md:hidden">
+                          {t.name}
+                        </span>
+                        <span
+                          className={`absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full md:hidden ${t.dot} ${
+                            selectedTheme === t.key ? "ring-1 ring-primary" : ""
+                          }`}
+                        />
                       </div>
-                      <div className="flex items-center justify-between p-5">
+                      <div className="hidden items-center justify-between p-5 md:flex">
                         <div>
                           <p className="text-xs uppercase tracking-widest text-white/40">
                             {t.label}
@@ -465,11 +479,11 @@ export default function Page() {
                   ))}
                 </div>
 
-                <div className="mt-10 flex justify-center">
+                <div className="mt-6 flex justify-center md:mt-10">
                   <button
                     onClick={handleThemeNext}
                     disabled={!selectedTheme}
-                    className={`group flex items-center gap-2 rounded-full py-2 pl-6 pr-2 text-sm font-medium transition-all sm:text-base ${
+                    className={`group flex items-center gap-2 rounded-full py-1.5 pl-4 pr-1.5 text-xs font-medium transition-all sm:text-base md:py-2 md:pl-6 md:pr-2 ${
                       selectedTheme
                         ? "bg-primary text-black shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:gap-3"
                         : "cursor-not-allowed bg-white/10 text-white/30"
@@ -477,12 +491,12 @@ export default function Page() {
                   >
                     Next
                     <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-full sm:h-10 sm:w-10 ${
+                      className={`flex h-7 w-7 items-center justify-center rounded-full md:h-10 md:w-10 ${
                         selectedTheme ? "bg-black" : "bg-white/10"
                       }`}
                     >
                       <ArrowRight
-                        size={18}
+                        size={16}
                         className={
                           selectedTheme ? "text-primary" : "text-white/30"
                         }
@@ -503,10 +517,10 @@ export default function Page() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
-              className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 p-6"
+              className="absolute inset-0 z-20 flex items-center justify-center bg-black/70"
             >
-              <div className="w-full max-w-3xl">
-                <h2 className="text-center text-3xl tracking-tight text-white md:text-5xl">
+              <div className="w-full max-w-3xl p-4 py-6 md:p-6">
+                <h2 className="text-center text-xl tracking-tight text-white md:text-5xl">
                   Choose your{" "}
                   <em
                     className="text-white/40"
@@ -516,7 +530,7 @@ export default function Page() {
                   </em>
                 </h2>
 
-                <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:mt-10 md:gap-6">
                   {MOODS.map((m) => (
                     <motion.button
                       key={m.key}
@@ -524,14 +538,14 @@ export default function Page() {
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, ease: EASE }}
-                      className={`liquid-glass flex flex-col items-start gap-6 rounded-3xl p-6 text-left transition-all md:p-8 ${
+                      className={`liquid-glass flex flex-col items-start gap-3 rounded-3xl p-4 text-left transition-all md:gap-6 md:p-8 ${
                         selectedMood === m.key
                           ? "ring-2 ring-primary"
                           : "ring-1 ring-white/10 hover:ring-white/30"
                       }`}
                     >
                       <span
-                        className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
+                        className={`flex h-10 w-10 items-center justify-center rounded-2xl md:h-14 md:w-14 ${
                           selectedMood === m.key
                             ? "bg-primary text-black"
                             : "bg-white/5 text-primary"
@@ -540,32 +554,32 @@ export default function Page() {
                         {m.icon}
                       </span>
                       <div>
-                        <h3 className="text-xl tracking-tight text-white md:text-2xl">
+                        <h3 className="text-base tracking-tight text-white md:text-2xl">
                           {m.title}
                         </h3>
-                        <p className="mt-2 text-sm leading-relaxed text-white/50">
+                        <p className="mt-1 text-xs leading-relaxed text-white/50 md:mt-2 md:text-sm">
                           {m.description}
                         </p>
                       </div>
                       {selectedMood === m.key && (
-                        <ListTodo className="absolute right-6 top-6 h-5 w-5 text-primary" />
+                        <ListTodo className="absolute right-5 top-5 h-4 w-4 text-primary md:h-5 md:w-5" />
                       )}
                     </motion.button>
                   ))}
                 </div>
 
-                <div className="mt-10 flex justify-center gap-3">
+                <div className="mt-6 flex justify-center gap-3 md:mt-10">
                   <button
                     onClick={() => setStage("theme")}
-                    className="flex items-center gap-2 rounded-full bg-white/10 px-6 py-2 text-sm font-medium text-white/70 transition-colors hover:text-white sm:text-base"
+                    className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-white/70 transition-colors hover:text-white md:px-6 md:py-2 md:text-sm"
                   >
-                    <ArrowLeft size={16} />
+                    <ArrowLeft size={14} />
                     Theme
                   </button>
                   <button
                     onClick={handleMoodNext}
                     disabled={!selectedMood}
-                    className={`group flex items-center gap-2 rounded-full py-2 pl-6 pr-2 text-sm font-medium transition-all sm:text-base ${
+                    className={`group flex items-center gap-2 rounded-full py-1.5 pl-4 pr-1.5 text-xs font-medium transition-all md:py-2 md:pl-6 md:pr-2 md:text-sm ${
                       selectedMood
                         ? "bg-primary text-black shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:gap-3"
                         : "cursor-not-allowed bg-white/10 text-white/30"
@@ -573,7 +587,7 @@ export default function Page() {
                   >
                     Next
                     <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-full sm:h-10 sm:w-10 ${
+                      className={`flex h-7 w-7 items-center justify-center rounded-full md:h-10 md:w-10 ${
                         selectedMood ? "bg-black" : "bg-white/10"
                       }`}
                     >
@@ -619,7 +633,7 @@ export default function Page() {
 
               {selectedMood === "study" && (
                 <>
-                  <div className="absolute left-4 top-1/2 z-20 w-60 -translate-y-1/2 md:left-[calc((50%-min(448px,50vw)-288px)/2)] md:w-72">
+                  <div className="absolute left-4 top-1/2 z-20 hidden w-60 -translate-y-1/2 md:left-[calc((50%-min(448px,50vw)-288px)/2)] md:block md:w-72">
                     <FocusTimer
                       duration={timerDuration}
                       remaining={remaining}
@@ -630,7 +644,7 @@ export default function Page() {
                       onReset={resetTimer}
                     />
                   </div>
-                  <div className="absolute right-4 top-1/2 z-20 w-60 -translate-y-1/2 md:right-[calc((50%-min(448px,50vw)-288px)/2)] md:w-72">
+                  <div className="absolute right-4 top-1/2 z-20 hidden w-60 -translate-y-1/2 md:right-[calc((50%-min(448px,50vw)-288px)/2)] md:block md:w-72">
                     <TodoPanel
                       todos={todos}
                       timerActive={timerRunning || timerDone}
@@ -643,7 +657,59 @@ export default function Page() {
               )}
 
               <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-4 md:px-6 md:pb-6">
-                <div className="mx-auto w-full max-w-4xl">
+                <div className="mx-auto w-full max-w-4xl space-y-2.5">
+                  {selectedMood === "study" && (
+                    <div className="md:hidden">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setShowMobileTimer((v) => !v)}
+                          className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium ring-1 transition-all ${
+                            showMobileTimer
+                              ? "bg-[var(--acc)] text-[var(--acc-txt)] ring-transparent"
+                              : "bg-[var(--chip)] text-[var(--txt-soft)] ring-[var(--ring)]"
+                          }`}
+                        >
+                          <Timer size={13} />
+                          Timer
+                        </button>
+                        <button
+                          onClick={() => setShowMobileTodo((v) => !v)}
+                          className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium ring-1 transition-all ${
+                            showMobileTodo
+                              ? "bg-[var(--acc)] text-[var(--acc-txt)] ring-transparent"
+                              : "bg-[var(--chip)] text-[var(--txt-soft)] ring-[var(--ring)]"
+                          }`}
+                        >
+                          <ListTodo size={13} />
+                          Todo
+                        </button>
+                      </div>
+                      {showMobileTimer && (
+                        <div className="mt-2.5">
+                          <FocusTimer
+                            duration={timerDuration}
+                            remaining={remaining}
+                            running={timerRunning}
+                            done={timerDone}
+                            onSetDuration={setTimerDurationSafe}
+                            onToggle={toggleTimer}
+                            onReset={resetTimer}
+                          />
+                        </div>
+                      )}
+                      {showMobileTodo && (
+                        <div className="mt-2.5">
+                          <TodoPanel
+                            todos={todos}
+                            timerActive={timerRunning || timerDone}
+                            onAdd={addTodo}
+                            onToggle={toggleTodo}
+                            onRemove={removeTodo}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <AudioPlayer
                     tracks={TRACKS}
                     currentIndex={trackIndex}
