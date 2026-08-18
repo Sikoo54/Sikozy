@@ -620,7 +620,7 @@ export default function Page() {
                 onClick={() => setStage("theme")}
                 className="liquid-glass absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full bg-[var(--btn-bg)] px-4 py-2 text-sm text-[var(--txt)] backdrop-blur-md ring-1 ring-[var(--ring)] transition-colors hover:bg-[var(--btn-bg-hover)] md:right-6 md:top-6"
               >
-                Change theme
+                Customize
                 <ArrowRight size={16} className="rotate-90" />
               </button>
               <button
