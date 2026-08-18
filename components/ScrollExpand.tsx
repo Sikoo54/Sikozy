@@ -1,3 +1,4 @@
+// (Cadangan, belum dirender) Animasi scroll-expand konten.
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";

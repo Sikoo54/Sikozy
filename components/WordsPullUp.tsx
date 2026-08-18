@@ -1,3 +1,4 @@
+// (Cadangan, belum dirender) Animasi teks per-kata naik saat scroll.
 "use client";
 
 import { useRef } from "react";

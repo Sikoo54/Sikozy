@@ -1,3 +1,4 @@
+// Background awan animasi (Vanta.js) yang warnanya menyesuaikan theme (classic/dark/light).
 "use client";
 
 import { useEffect, useRef } from "react";

@@ -1,3 +1,4 @@
+// (Cadangan, belum dirender) Section tentang Sikozy.
 "use client";
 
 import { useRef } from "react";

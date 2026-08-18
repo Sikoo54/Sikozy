@@ -1,3 +1,4 @@
+// Type declaration untuk modul Vanta Clouds.
 declare module "vanta/dist/vanta.clouds.min" {
   interface VantaCloudsOptions {
     el: HTMLElement;

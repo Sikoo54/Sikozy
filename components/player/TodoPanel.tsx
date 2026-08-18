@@ -1,3 +1,4 @@
+// Todo list study mode: tambah/tandai/hapus task, persist di localStorage, hanya aktif saat timer berjalan.
 "use client";
 
 import { useState } from "react";
@@ -16,12 +17,14 @@ export default function TodoPanel({
   onAdd,
   onToggle,
   onRemove,
+  onClose,
 }: {
   todos: Todo[];
   timerActive: boolean;
   onAdd: (text: string) => void;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
+  onClose?: () => void;
 }) {
   const [text, setText] = useState("");
 
@@ -43,17 +46,28 @@ export default function TodoPanel({
           <ListTodo size={14} className="hidden text-[var(--acc)] md:block" />
           Todo list
         </p>
-        {timerActive ? (
-          <span className="flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[var(--acc-from)] via-[var(--acc-mid)] to-[var(--acc-to)] px-2 py-0.5 text-[9px] font-medium uppercase tracking-widest text-[var(--acc-txt)] md:px-3 md:py-1 md:text-[10px]">
-            <Timer size={10} className="md:hidden" />
-            <Timer size={11} className="hidden md:block" />
-            Focus on
-          </span>
-        ) : (
-          <span className="flex items-center gap-1 text-[9px] uppercase tracking-widest text-[var(--txt-faint)] md:text-[10px]">
-            {doneCount}/{todos.length} done
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {timerActive ? (
+            <span className="flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[var(--acc-from)] via-[var(--acc-mid)] to-[var(--acc-to)] px-2 py-0.5 text-[9px] font-medium uppercase tracking-widest text-[var(--acc-txt)] md:px-3 md:py-1 md:text-[10px]">
+              <Timer size={10} className="md:hidden" />
+              <Timer size={11} className="hidden md:block" />
+              Focus on
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-[9px] uppercase tracking-widest text-[var(--txt-faint)] md:text-[10px]">
+              {doneCount}/{todos.length} done
+            </span>
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              aria-label="Close todo list"
+              className="rounded-full bg-[var(--chip)] p-1.5 text-[var(--txt-soft)] transition-colors hover:bg-[var(--btn-bg-hover)] hover:text-[var(--txt)]"
+            >
+              <X size={13} />
+            </button>
+          )}
+        </div>
       </div>
 
       {!timerActive ? (

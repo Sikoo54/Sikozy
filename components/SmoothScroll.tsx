@@ -1,3 +1,4 @@
+// Smooth scrolling halus pakai Lenis (global).
 "use client";
 
 import { useEffect } from "react";

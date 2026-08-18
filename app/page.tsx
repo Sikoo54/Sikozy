@@ -1,3 +1,4 @@
+// Halaman utama Sikozy: flow stage home -> pilih theme -> pilih mood (chill/study) -> player. Mengelola state audio, timer focus, todo, dan video background.
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -15,6 +16,7 @@ import type { Track } from "@/components/player/AudioPlayer";
 import FocusTimer from "@/components/player/FocusTimer";
 import TodoPanel from "@/components/player/TodoPanel";
 import type { Todo } from "@/components/player/TodoPanel";
+import ShinyText from "@/components/ShinyText";
 
 const HERO_VIDEO_URL =
   "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4";
@@ -25,24 +27,39 @@ const LIGHT_VIDEO_URL =
 
 const TRACKS: Track[] = [
   {
-    title: "Distant Memory",
-    artist: "Nightingale Lofi",
-    src: "https://archive.org/download/jamendo-469637/01-1916606-Nightingale%20Lofi-Distant%20Memory%20_%20Non%20Copyright%20Lofi.mp3",
+    title: "Luv (sic) pt2 Instrumentals",
+    artist: "Nujabes",
+    src: "/audio/Luv (sic) pt2 Instrumentals.mp3",
   },
   {
-    title: "Mellow",
-    artist: "Nightingale Lofi",
-    src: "https://archive.org/download/jamendo-469945/01-1917273-Nightingale%20Lofi-Mellow%20_%20Non%20Copyright%20Lofi.mp3",
+    title: "Feelings, Mutual",
+    artist: "LJones — Music For Your Soul",
+    src: "/audio/LJones - Feelings, Mutual - Music For Your Soul (128k).mp3",
   },
   {
-    title: "Songbird",
-    artist: "Nightingale Lofi",
-    src: "https://archive.org/download/jamendo-469733/01-1916823-Nightingale%20Lofi-Songbird%20_%20Non%20Copyright%20Lofi.mp3",
+    title: "愛密集 (Instrumental)",
+    artist: "Yakkle, Shing02",
+    src: "/audio/愛密集 (Instrumental).mp3",
   },
   {
-    title: "Lofi Cafe",
-    artist: "Edward Khomych",
-    src: "https://archive.org/download/jamendo-603030/01-2253482-Edward%20Khomych-Lofi%20Cafe.mp3",
+    title: "Coffee House No. 5",
+    artist: "Nightingale Lofi",
+    src: "/audio/Coffee House No. 5.mp3",
+  },
+  {
+    title: "Soul Below",
+    artist: "LJones",
+    src: "/audio/Ljones - Soul Below.mp3",
+  },
+  {
+    title: "Mother's Heart",
+    artist: "Unknown",
+    src: "/audio/Mother's Heart.mp3",
+  },
+  {
+    title: "Reflection Eternal",
+    artist: "Nujabes",
+    src: "/audio/Nujabes - reflection eternal [Official Audio].mp3",
   },
 ];
 
@@ -313,6 +330,7 @@ export default function Page() {
   const handleMoodNext = useCallback(() => {
     if (!selectedMood) return;
     setStage("player");
+    setPlaying(true);
   }, [selectedMood]);
 
   return (
@@ -333,9 +351,13 @@ export default function Page() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2, ease: EASE }}
-              className="font-playfair text-6xl tracking-[-0.02em] text-primary md:text-8xl"
+              className="relative inline-block pb-[0.18em] font-playfair text-6xl tracking-[-0.02em] text-primary md:text-8xl"
             >
               Sikozy
+              <ShinyText
+                text="Sikozy"
+                className="absolute inset-0 inline-block font-playfair text-6xl tracking-[-0.02em] md:text-8xl"
+              />
             </motion.span>
           </motion.div>
         )}
@@ -381,8 +403,12 @@ export default function Page() {
               animate={introDone ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.7, delay: 0.5, ease: EASE }}
             >
-              <span className="bg-gradient-to-br from-[#f7ecd4] via-[#e8c58f] to-[#d9a05f] bg-clip-text font-playfair text-6xl leading-[0.9] tracking-[-0.03em] text-transparent drop-shadow-[0_2px_20px_rgba(217,160,95,0.3)] md:text-8xl">
+              <span className="relative inline-block bg-gradient-to-br from-[#f7ecd4] via-[#e8c58f] to-[#d9a05f] bg-clip-text pb-[0.18em] font-playfair text-6xl leading-[0.9] tracking-[-0.03em] text-transparent drop-shadow-[0_2px_20px_rgba(217,160,95,0.3)] md:text-8xl">
                 Sikozy
+                <ShinyText
+                  text="Sikozy"
+                  className="absolute inset-0 inline-block font-playfair text-6xl leading-[0.9] tracking-[-0.03em] md:text-8xl"
+                />
               </span>
             </motion.p>
 
@@ -393,7 +419,7 @@ export default function Page() {
               transition={{ duration: 0.7, delay: 0.65, ease: EASE }}
               className="group flex items-center gap-2 rounded-full bg-primary py-2 pl-6 pr-2 text-sm font-medium text-black shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all hover:gap-3 sm:text-base"
             >
-              Start focusing
+              Play music
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
                 <ArrowRight size={18} className="text-primary" />
               </span>
@@ -684,30 +710,66 @@ export default function Page() {
                           Todo
                         </button>
                       </div>
-                      {showMobileTimer && (
-                        <div className="mt-2.5">
-                          <FocusTimer
-                            duration={timerDuration}
-                            remaining={remaining}
-                            running={timerRunning}
-                            done={timerDone}
-                            onSetDuration={setTimerDurationSafe}
-                            onToggle={toggleTimer}
-                            onReset={resetTimer}
-                          />
-                        </div>
-                      )}
-                      {showMobileTodo && (
-                        <div className="mt-2.5">
-                          <TodoPanel
-                            todos={todos}
-                            timerActive={timerRunning || timerDone}
-                            onAdd={addTodo}
-                            onToggle={toggleTodo}
-                            onRemove={removeTodo}
-                          />
-                        </div>
-                      )}
+                      <AnimatePresence initial={false}>
+                        {showMobileTimer && (
+                          <motion.div
+                            key="mobile-timer"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: EASE }}
+                            className="overflow-hidden"
+                            style={{
+                              "--panel":
+                                selectedTheme === "light"
+                                  ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(240,236,255,0.94))"
+                                  : "linear-gradient(180deg, rgba(18,24,46,0.97), rgba(10,16,32,0.92))",
+                            } as React.CSSProperties}
+                          >
+                            <div className="pt-2.5">
+                              <FocusTimer
+                                duration={timerDuration}
+                                remaining={remaining}
+                                running={timerRunning}
+                                done={timerDone}
+                                onSetDuration={setTimerDurationSafe}
+                                onToggle={toggleTimer}
+                                onReset={resetTimer}
+                                onClose={() => setShowMobileTimer(false)}
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      <AnimatePresence initial={false}>
+                        {showMobileTodo && (
+                          <motion.div
+                            key="mobile-todo"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: EASE }}
+                            className="overflow-hidden"
+                            style={{
+                              "--panel":
+                                selectedTheme === "light"
+                                  ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(240,236,255,0.94))"
+                                  : "linear-gradient(180deg, rgba(18,24,46,0.97), rgba(10,16,32,0.92))",
+                            } as React.CSSProperties}
+                          >
+                            <div className="pt-2.5">
+                              <TodoPanel
+                                todos={todos}
+                                timerActive={timerRunning || timerDone}
+                                onAdd={addTodo}
+                                onToggle={toggleTodo}
+                                onRemove={removeTodo}
+                                onClose={() => setShowMobileTodo(false)}
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   )}
                   <AudioPlayer

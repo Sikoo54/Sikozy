@@ -1,3 +1,4 @@
+// Player audio bottom bar: judul lagu, kontrol play/prev/next, equalizer, volume. Warna mengikuti theme via CSS vars.
 "use client";
 
 import { motion } from "framer-motion";
@@ -116,22 +117,6 @@ export default function AudioPlayer({
             aria-label="Volume"
           />
         </div>
-      </div>
-
-      <div className="mt-2.5 flex items-center gap-3">
-        <input
-          type="range"
-          min={0}
-          max={duration || 0}
-          step={0.1}
-          value={currentTime}
-          onChange={(e) => onSeek(Number(e.target.value))}
-          className="min-w-0 flex-1 [accent-color:var(--acc)]"
-          aria-label="Seek"
-        />
-        <span className="shrink-0 text-[11px] tabular-nums text-[var(--txt-faint)] md:text-xs">
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </span>
       </div>
     </div>
   );

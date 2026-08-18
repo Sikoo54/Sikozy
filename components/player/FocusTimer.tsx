@@ -1,6 +1,8 @@
+// Timer fokus study mode: ring progres, preset 15/25/50m + custom menit, tombol start/pause/reset, chime saat selesai.
 "use client";
 
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { Pause, Play, RotateCcw, X } from "lucide-react";
 
 const PRESETS = [15, 25, 50];
 const RING_RADIUS = 62;
@@ -20,6 +22,7 @@ export default function FocusTimer({
   onSetDuration,
   onToggle,
   onReset,
+  onClose,
 }: {
   duration: number;
   remaining: number;
@@ -28,9 +31,22 @@ export default function FocusTimer({
   onSetDuration: (seconds: number) => void;
   onToggle: () => void;
   onReset: () => void;
+  onClose?: () => void;
 }) {
   const progress = duration > 0 ? remaining / duration : 0;
   const dashOffset = RING_CIRCUMFERENCE * (1 - progress);
+  const [custom, setCustom] = useState("");
+  const isCustomActive =
+    !PRESETS.includes(duration / 60) && duration === Math.round(Number(custom) * 60) && custom !== "";
+
+  const applyCustom = () => {
+    const m = Number(custom);
+    if (!Number.isFinite(m) || m <= 0 || m > 180) {
+      setCustom("");
+      return;
+    }
+    onSetDuration(Math.round(m * 60));
+  };
 
   return (
     <div className="liquid-glass rounded-3xl p-4 md:p-8">
@@ -38,17 +54,28 @@ export default function FocusTimer({
         <p className="text-[10px] uppercase tracking-widest text-[var(--txt-faint)] md:text-xs">
           Focus timer
         </p>
-        {running && (
-          <span className="flex items-center gap-1.5">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--acc)] opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--acc)]" />
+        <div className="flex items-center gap-2">
+          {running && (
+            <span className="flex items-center gap-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--acc)] opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--acc)]" />
+              </span>
+              <span className="text-[10px] uppercase tracking-widest text-[var(--acc)]">
+                In session
+              </span>
             </span>
-            <span className="text-[10px] uppercase tracking-widest text-[var(--acc)]">
-              In session
-            </span>
-          </span>
-        )}
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              aria-label="Close timer"
+              className="rounded-full bg-[var(--chip)] p-1.5 text-[var(--txt-soft)] transition-colors hover:bg-[var(--btn-bg-hover)] hover:text-[var(--txt)]"
+            >
+              <X size={13} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="relative mx-auto h-[120px] w-[120px] md:h-[148px] md:w-[148px]">
@@ -113,6 +140,37 @@ export default function FocusTimer({
             {minutes}m
           </button>
         ))}
+        <label
+          className={`flex items-center gap-0.5 rounded-full px-2 py-1 text-[11px] font-medium transition-all md:px-3 md:py-1.5 md:text-xs ${
+            isCustomActive && !done
+              ? "bg-gradient-to-br from-[var(--acc-from)] via-[var(--acc-mid)] to-[var(--acc-to)] text-[var(--acc-txt)] shadow-[0_4px_16px_var(--glow)]"
+              : "bg-[var(--chip)] text-[var(--txt-soft)] hover:bg-[var(--btn-bg-hover)] hover:text-[var(--txt)]"
+          }`}
+        >
+          <input
+            type="number"
+            inputMode="decimal"
+            min={1}
+            max={180}
+            value={custom}
+            onChange={(e) => setCustom(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                applyCustom();
+                e.currentTarget.blur();
+              }
+            }}
+            onBlur={applyCustom}
+            placeholder="Custom"
+            aria-label="Custom minutes"
+            className={`w-11 bg-transparent text-center outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+              isCustomActive ? "text-[var(--acc-txt)]" : "text-[var(--txt)]"
+            } placeholder:opacity-60`}
+          />
+          <span className={isCustomActive ? "opacity-80" : "opacity-50"}>
+            m
+          </span>
+        </label>
       </div>
 
       <div className="mt-4 flex items-center justify-center gap-2 md:mt-6 md:gap-3">

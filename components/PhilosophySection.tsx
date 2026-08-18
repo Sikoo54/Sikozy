@@ -1,3 +1,4 @@
+// (Cadangan, belum dirender) Section filosofi brand.
 "use client";
 
 import { useRef } from "react";
