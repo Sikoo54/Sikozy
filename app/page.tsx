@@ -1,69 +1,671 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ListTodo,
+  Music,
+  Timer,
+} from "lucide-react";
+import AudioPlayer from "@/components/player/AudioPlayer";
+import type { Track } from "@/components/player/AudioPlayer";
+import FocusTimer from "@/components/player/FocusTimer";
+import TodoPanel from "@/components/player/TodoPanel";
+import type { Todo } from "@/components/player/TodoPanel";
+
+const HERO_VIDEO_URL =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4";
+const DARK_VIDEO_URL =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4";
+const LIGHT_VIDEO_URL =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260324_151826_c7218672-6e92-402c-9e45-f1e0f454bdc4.mp4";
+
+const TRACKS: Track[] = [
+  {
+    title: "Distant Memory",
+    artist: "Nightingale Lofi",
+    src: "https://archive.org/download/jamendo-469637/01-1916606-Nightingale%20Lofi-Distant%20Memory%20_%20Non%20Copyright%20Lofi.mp3",
+  },
+  {
+    title: "Mellow",
+    artist: "Nightingale Lofi",
+    src: "https://archive.org/download/jamendo-469945/01-1917273-Nightingale%20Lofi-Mellow%20_%20Non%20Copyright%20Lofi.mp3",
+  },
+  {
+    title: "Songbird",
+    artist: "Nightingale Lofi",
+    src: "https://archive.org/download/jamendo-469733/01-1916823-Nightingale%20Lofi-Songbird%20_%20Non%20Copyright%20Lofi.mp3",
+  },
+  {
+    title: "Lofi Cafe",
+    artist: "Edward Khomych",
+    src: "https://archive.org/download/jamendo-603030/01-2253482-Edward%20Khomych-Lofi%20Cafe.mp3",
+  },
+];
+
+const STORAGE_KEY = "sikozy-todos";
+
+const EASE = [0.16, 1, 0.3, 1] as const;
+
+const THEME_VARS: Record<ThemeKey, Record<string, string>> = {
+  classic: {
+    "--panel": "rgba(10,16,32,0.45)",
+    "--ring": "rgba(255,255,255,0.1)",
+    "--txt": "#e1e0cc",
+    "--txt-soft": "rgba(225,224,204,0.6)",
+    "--txt-faint": "rgba(225,224,204,0.35)",
+    "--acc": "#e8c58f",
+    "--acc-from": "#f7ecd4",
+    "--acc-mid": "#e8c58f",
+    "--acc-to": "#d9a05f",
+    "--acc-txt": "#000000",
+    "--glow": "rgba(232,197,143,0.35)",
+    "--btn-bg": "rgba(10,16,32,0.25)",
+    "--btn-bg-hover": "rgba(10,16,32,0.4)",
+    "--chip": "rgba(255,255,255,0.05)",
+    "--track": "rgba(255,255,255,0.08)",
+    "--shine": "rgba(255,255,255,0.1)",
+  },
+  dark: {
+    "--panel": "rgba(10,16,32,0.5)",
+    "--ring": "rgba(255,255,255,0.1)",
+    "--txt": "#e1e0cc",
+    "--txt-soft": "rgba(225,224,204,0.6)",
+    "--txt-faint": "rgba(225,224,204,0.35)",
+    "--acc": "#e8c58f",
+    "--acc-from": "#f7ecd4",
+    "--acc-mid": "#e8c58f",
+    "--acc-to": "#d9a05f",
+    "--acc-txt": "#000000",
+    "--glow": "rgba(232,197,143,0.35)",
+    "--btn-bg": "rgba(10,16,32,0.25)",
+    "--btn-bg-hover": "rgba(10,16,32,0.4)",
+    "--chip": "rgba(255,255,255,0.05)",
+    "--track": "rgba(255,255,255,0.08)",
+    "--shine": "rgba(255,255,255,0.1)",
+  },
+  light: {
+    "--panel": "rgba(255,255,255,0.6)",
+    "--ring": "rgba(30,44,80,0.18)",
+    "--txt": "#1e2c50",
+    "--txt-soft": "rgba(30,44,80,0.6)",
+    "--txt-faint": "rgba(30,44,80,0.35)",
+    "--acc": "#5e4a94",
+    "--acc-from": "#8b7bd6",
+    "--acc-mid": "#6b5bd6",
+    "--acc-to": "#45369b",
+    "--acc-txt": "#ffffff",
+    "--glow": "rgba(107,91,214,0.35)",
+    "--btn-bg": "rgba(255,255,255,0.45)",
+    "--btn-bg-hover": "rgba(255,255,255,0.65)",
+    "--chip": "rgba(30,44,80,0.07)",
+    "--track": "rgba(30,44,80,0.14)",
+    "--shine": "rgba(30,44,80,0.12)",
+  },
+};
+
+const VantaClouds = dynamic(() => import("@/components/VantaClouds"), {
+  ssr: false,
+});
+
+function playChime() {
+  const ctx = new AudioContext();
+  const now = ctx.currentTime;
+  for (let i = 0; i < 3; i++) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, now + i * 0.35);
+    gain.gain.exponentialRampToValueAtTime(0.15, now + i * 0.35 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.35 + 0.3);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + i * 0.35);
+    osc.stop(now + i * 0.35 + 0.35);
+  }
+}
+
+type Stage = "home" | "theme" | "mood" | "player";
+type ThemeKey = "classic" | "dark" | "light";
+type MoodKey = "chill" | "study";
+
+const THEMES: {
+  key: ThemeKey;
+  label: string;
+  name: string;
+  src: string;
+  dot: string;
+}[] = [
+  {
+    key: "classic",
+    label: "Classic",
+    name: "Original",
+    src: HERO_VIDEO_URL,
+    dot: "bg-[#e8c58f]",
+  },
+  {
+    key: "dark",
+    label: "Dark",
+    name: "Night sky",
+    src: DARK_VIDEO_URL,
+    dot: "bg-sky-night ring-1 ring-white/30",
+  },
+  {
+    key: "light",
+    label: "Light",
+    name: "Daylight",
+    src: LIGHT_VIDEO_URL,
+    dot: "bg-white ring-1 ring-white/50",
+  },
+];
+
+const MOODS: {
+  key: MoodKey;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    key: "chill",
+    title: "Chill",
+    description:
+      "Just the music — relax, and let the beats play in the background.",
+    icon: <Music size={28} />,
+  },
+  {
+    key: "study",
+    title: "Study",
+    description:
+      "Focus session — a timer and todo list keep your tasks on track while you work.",
+    icon: <Timer size={28} />,
+  },
+];
+
+export default function Page() {
+  const [introDone, setIntroDone] = useState(false);
+  const [stage, setStage] = useState<Stage>("home");
+  const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
+  const [themeVideo, setThemeVideo] = useState(HERO_VIDEO_URL);
+  const [selectedMood, setSelectedMood] = useState<MoodKey | null>(null);
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const [trackIndex, setTrackIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(0.8);
+
+  const [todos, setTodos] = useState<Todo[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as Todo[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [timerDuration, setTimerDuration] = useState(25 * 60);
+  const [remaining, setRemaining] = useState(25 * 60);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerDone, setTimerDone] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  }, [todos]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = volume;
+  }, [volume]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) {
+      audio.play().catch(() => setPlaying(false));
+    } else {
+      audio.pause();
+    }
+  }, [playing, trackIndex]);
+
+  useEffect(() => {
+    if (!timerRunning) return;
+    if (remaining <= 0) return;
+    const id = setInterval(() => {
+      setRemaining((r) => {
+        if (r <= 1) {
+          setTimerRunning(false);
+          setTimerDone(true);
+          playChime();
+          return 0;
+        }
+        return r - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [timerRunning, remaining]);
+
+  const togglePlay = useCallback(() => setPlaying((p) => !p), []);
+  const selectTrack = useCallback((i: number) => {
+    setTrackIndex(i);
+    setPlaying(true);
+  }, []);
+  const nextTrack = useCallback(
+    () => setTrackIndex((i) => (i + 1) % TRACKS.length),
+    []
+  );
+  const prevTrack = useCallback(
+    () => setTrackIndex((i) => (i - 1 + TRACKS.length) % TRACKS.length),
+    []
+  );
+
+  const setTimerDurationSafe = useCallback((seconds: number) => {
+    setTimerDuration(seconds);
+    setRemaining(seconds);
+    setTimerRunning(false);
+    setTimerDone(false);
+  }, []);
+  const toggleTimer = useCallback(() => {
+    if (timerDone) return;
+    setTimerRunning((r) => !r);
+  }, [timerDone]);
+  const resetTimer = useCallback(() => {
+    setTimerRunning(false);
+    setTimerDone(false);
+    setRemaining(timerDuration);
+  }, [timerDuration]);
+
+  const addTodo = useCallback((text: string) => {
+    setTodos((prev) => [
+      ...prev,
+      {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        text,
+        done: false,
+      },
+    ]);
+  }, []);
+  const toggleTodo = useCallback((id: string) => {
+    setTodos((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+    );
+  }, []);
+  const removeTodo = useCallback((id: string) => {
+    setTodos((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const handleThemeNext = useCallback(() => {
+    if (!selectedTheme) return;
+    const theme = THEMES.find((t) => t.key === selectedTheme);
+    if (!theme) return;
+    setThemeVideo(theme.src);
+    setStage("mood");
+  }, [selectedTheme]);
+
+  const handleMoodNext = useCallback(() => {
+    if (!selectedMood) return;
+    setStage("player");
+  }, [selectedMood]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      <AnimatePresence>
+        {!introDone && (
+          <motion.div
+            key="intro"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, delay: 1.4, ease: "easeInOut" }}
+            onAnimationStart={() => setIntroDone(true)}
+            onAnimationComplete={() => setIntroDone(true)}
+          >
+            <motion.span
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: EASE }}
+              className="font-playfair text-6xl tracking-[-0.02em] text-primary md:text-8xl"
+            >
+              Sikozy
+            </motion.span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <audio
+        ref={audioRef}
+        src={TRACKS[trackIndex].src}
+        preload="auto"
+        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onEnded={nextTrack}
+      />
+
+      <section className="relative h-screen overflow-hidden bg-sky-night">
+        <VantaClouds
+          className="pointer-events-none absolute inset-0"
+          theme={selectedTheme ?? "classic"}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <motion.video
+          key={themeVideo}
+          src={themeVideo}
+          className={`absolute left-1/2 top-1/2 aspect-video w-full max-w-4xl -translate-x-1/2 -translate-y-1/2 object-cover transition-opacity duration-500 [mask-image:radial-gradient(ellipse_at_center,black_55%,transparent_100%)] ${
+            stage === "theme" || stage === "mood" ? "opacity-0" : "opacity-100"
+          }`}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+
+        {stage === "home" && (
+          <motion.div
+            key="home"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 flex h-full flex-col items-center justify-between px-6 py-16 md:py-24"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={introDone ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.7, delay: 0.5, ease: EASE }}
+            >
+              <span className="bg-gradient-to-br from-[#f7ecd4] via-[#e8c58f] to-[#d9a05f] bg-clip-text font-playfair text-6xl leading-[0.9] tracking-[-0.03em] text-transparent drop-shadow-[0_2px_20px_rgba(217,160,95,0.3)] md:text-8xl">
+                Sikozy
+              </span>
+            </motion.p>
+
+            <motion.button
+              onClick={() => setStage("theme")}
+              initial={{ opacity: 0, y: 20 }}
+              animate={introDone ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.7, delay: 0.65, ease: EASE }}
+              className="group flex items-center gap-2 rounded-full bg-primary py-2 pl-6 pr-2 text-sm font-medium text-black shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all hover:gap-3 sm:text-base"
+            >
+              Start focusing
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
+                <ArrowRight size={18} className="text-primary" />
+              </span>
+            </motion.button>
+          </motion.div>
+        )}
+
+        <AnimatePresence>
+          {stage === "theme" && (
+            <motion.div
+              key="theme"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 p-6"
+            >
+              <div className="w-full max-w-4xl">
+                <h2 className="text-center text-3xl tracking-tight text-white md:text-5xl">
+                  Choose your{" "}
+                  <em
+                    className="text-white/40"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    theme
+                  </em>
+                </h2>
+
+                <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+                  {THEMES.map((t) => (
+                    <motion.button
+                      key={t.key}
+                      onClick={() => setSelectedTheme(t.key)}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, ease: EASE }}
+                      className={`group relative overflow-hidden rounded-3xl text-left transition-all ${
+                        selectedTheme === t.key
+                          ? "ring-2 ring-primary"
+                          : "ring-1 ring-white/10 hover:ring-white/30"
+                      }`}
+                    >
+                      <div className="relative aspect-video overflow-hidden">
+                        <video
+                          src={t.src}
+                          className="h-full w-full object-cover"
+                          muted
+                          autoPlay
+                          loop
+                          playsInline
+                          preload="auto"
+                        />
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      </div>
+                      <div className="flex items-center justify-between p-5">
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-white/40">
+                            {t.label}
+                          </p>
+                          <p className="mt-1 text-xl tracking-tight text-white">
+                            {t.name}
+                          </p>
+                        </div>
+                        <span
+                          className={`h-4 w-4 rounded-full ${t.dot} ${
+                            selectedTheme === t.key ? "ring-2 ring-primary" : ""
+                          }`}
+                        />
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+
+                <div className="mt-10 flex justify-center">
+                  <button
+                    onClick={handleThemeNext}
+                    disabled={!selectedTheme}
+                    className={`group flex items-center gap-2 rounded-full py-2 pl-6 pr-2 text-sm font-medium transition-all sm:text-base ${
+                      selectedTheme
+                        ? "bg-primary text-black shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:gap-3"
+                        : "cursor-not-allowed bg-white/10 text-white/30"
+                    }`}
+                  >
+                    Next
+                    <span
+                      className={`flex h-9 w-9 items-center justify-center rounded-full sm:h-10 sm:w-10 ${
+                        selectedTheme ? "bg-black" : "bg-white/10"
+                      }`}
+                    >
+                      <ArrowRight
+                        size={18}
+                        className={
+                          selectedTheme ? "text-primary" : "text-white/30"
+                        }
+                      />
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {stage === "mood" && (
+            <motion.div
+              key="mood"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 p-6"
+            >
+              <div className="w-full max-w-3xl">
+                <h2 className="text-center text-3xl tracking-tight text-white md:text-5xl">
+                  Choose your{" "}
+                  <em
+                    className="text-white/40"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    mood
+                  </em>
+                </h2>
+
+                <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {MOODS.map((m) => (
+                    <motion.button
+                      key={m.key}
+                      onClick={() => setSelectedMood(m.key)}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, ease: EASE }}
+                      className={`liquid-glass flex flex-col items-start gap-6 rounded-3xl p-6 text-left transition-all md:p-8 ${
+                        selectedMood === m.key
+                          ? "ring-2 ring-primary"
+                          : "ring-1 ring-white/10 hover:ring-white/30"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
+                          selectedMood === m.key
+                            ? "bg-primary text-black"
+                            : "bg-white/5 text-primary"
+                        }`}
+                      >
+                        {m.icon}
+                      </span>
+                      <div>
+                        <h3 className="text-xl tracking-tight text-white md:text-2xl">
+                          {m.title}
+                        </h3>
+                        <p className="mt-2 text-sm leading-relaxed text-white/50">
+                          {m.description}
+                        </p>
+                      </div>
+                      {selectedMood === m.key && (
+                        <ListTodo className="absolute right-6 top-6 h-5 w-5 text-primary" />
+                      )}
+                    </motion.button>
+                  ))}
+                </div>
+
+                <div className="mt-10 flex justify-center gap-3">
+                  <button
+                    onClick={() => setStage("theme")}
+                    className="flex items-center gap-2 rounded-full bg-white/10 px-6 py-2 text-sm font-medium text-white/70 transition-colors hover:text-white sm:text-base"
+                  >
+                    <ArrowLeft size={16} />
+                    Theme
+                  </button>
+                  <button
+                    onClick={handleMoodNext}
+                    disabled={!selectedMood}
+                    className={`group flex items-center gap-2 rounded-full py-2 pl-6 pr-2 text-sm font-medium transition-all sm:text-base ${
+                      selectedMood
+                        ? "bg-primary text-black shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:gap-3"
+                        : "cursor-not-allowed bg-white/10 text-white/30"
+                    }`}
+                  >
+                    Next
+                    <span
+                      className={`flex h-9 w-9 items-center justify-center rounded-full sm:h-10 sm:w-10 ${
+                        selectedMood ? "bg-black" : "bg-white/10"
+                      }`}
+                    >
+                      <ArrowRight
+                        size={18}
+                        className={
+                          selectedMood ? "text-primary" : "text-white/30"
+                        }
+                      />
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {stage === "player" && (
+            <motion.div
+              key="player"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.5, ease: EASE }}
+              className="absolute inset-0 z-20"
+              style={THEME_VARS[selectedTheme ?? "classic"] as React.CSSProperties}
+            >
+              <button
+                onClick={() => setStage("theme")}
+                className="liquid-glass absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full bg-[var(--btn-bg)] px-4 py-2 text-sm text-[var(--txt)] backdrop-blur-md ring-1 ring-[var(--ring)] transition-colors hover:bg-[var(--btn-bg-hover)] md:right-6 md:top-6"
+              >
+                Change theme
+                <ArrowRight size={16} className="rotate-90" />
+              </button>
+              <button
+                onClick={() => setStage("home")}
+                className="liquid-glass absolute left-4 top-4 z-30 flex items-center gap-2 rounded-full bg-[var(--btn-bg)] px-4 py-2 text-sm text-[var(--txt)] backdrop-blur-md ring-1 ring-[var(--ring)] transition-colors hover:bg-[var(--btn-bg-hover)] md:left-6 md:top-6"
+              >
+                <ArrowLeft size={16} />
+                Back to home
+              </button>
+
+              {selectedMood === "study" && (
+                <>
+                  <div className="absolute left-4 top-1/2 z-20 w-60 -translate-y-1/2 md:left-[calc((50%-min(448px,50vw)-288px)/2)] md:w-72">
+                    <FocusTimer
+                      duration={timerDuration}
+                      remaining={remaining}
+                      running={timerRunning}
+                      done={timerDone}
+                      onSetDuration={setTimerDurationSafe}
+                      onToggle={toggleTimer}
+                      onReset={resetTimer}
+                    />
+                  </div>
+                  <div className="absolute right-4 top-1/2 z-20 w-60 -translate-y-1/2 md:right-[calc((50%-min(448px,50vw)-288px)/2)] md:w-72">
+                    <TodoPanel
+                      todos={todos}
+                      timerActive={timerRunning || timerDone}
+                      onAdd={addTodo}
+                      onToggle={toggleTodo}
+                      onRemove={removeTodo}
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-4 md:px-6 md:pb-6">
+                <div className="mx-auto w-full max-w-4xl">
+                  <AudioPlayer
+                    tracks={TRACKS}
+                    currentIndex={trackIndex}
+                    playing={playing}
+                    onSelect={selectTrack}
+                    onPrev={prevTrack}
+                    onNext={nextTrack}
+                    onToggle={togglePlay}
+                    currentTime={currentTime}
+                    duration={duration}
+                    onSeek={(t) => {
+                      if (audioRef.current) audioRef.current.currentTime = t;
+                    }}
+                    volume={volume}
+                    onVolumeChange={setVolume}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
+    </>
   );
 }
