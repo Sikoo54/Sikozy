@@ -396,7 +396,7 @@ export default function Page() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative z-10 flex h-full flex-col items-center justify-between px-6 py-10 md:py-24"
+            className="relative z-10 flex h-full flex-col items-center justify-between px-6 pt-20 pb-3 md:py-24"
           >
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -417,7 +417,7 @@ export default function Page() {
               initial={{ opacity: 0, y: 20 }}
               animate={introDone ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.7, delay: 0.65, ease: EASE }}
-              className="group flex items-center gap-2 rounded-full bg-primary py-2 pl-6 pr-2 text-sm font-medium text-black shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all hover:gap-3 sm:text-base"
+              className="group mb-16 flex items-center gap-2 rounded-full bg-primary py-2 pl-6 pr-2 text-sm font-medium text-black shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all hover:gap-3 sm:text-base md:mb-0"
             >
               Play music
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
@@ -785,8 +785,9 @@ export default function Page() {
                     onSeek={(t) => {
                       if (audioRef.current) audioRef.current.currentTime = t;
                     }}
-                    volume={volume}
+volume={volume}
                     onVolumeChange={setVolume}
+                    theme={selectedTheme ?? "classic"}
                   />
                 </div>
               </div>
