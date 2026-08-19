@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
   ListTodo,
   Music,
   Timer,
@@ -210,13 +211,16 @@ export default function Page() {
   const [showMobileTimer, setShowMobileTimer] = useState(false);
   const [showMobileTodo, setShowMobileTodo] = useState(false);
 
-  const audioRef = useRef<HTMLAudioElement>(null);
+const audioRef = useRef<HTMLAudioElement>(null);
 
   const [trackIndex, setTrackIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState<"off" | "one" | "all">("all");
 
   const [todos, setTodos] = useState<Todo[]>(() => {
     if (typeof window === "undefined") return [];
@@ -228,10 +232,19 @@ export default function Page() {
     }
   });
 
-  const [timerDuration, setTimerDuration] = useState(25 * 60);
+const [timerDuration, setTimerDuration] = useState(25 * 60);
   const [remaining, setRemaining] = useState(25 * 60);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerDone, setTimerDone] = useState(false);
+
+  const todosRef = useRef(todos);
+  useEffect(() => {
+    todosRef.current = todos;
+  }, [todos]);
+
+  const sessionStartDoneIds = useRef<string[]>([]);
+  const [sessionCompletedTodos, setSessionCompletedTodos] = useState<Todo[]>([]);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
@@ -253,7 +266,7 @@ export default function Page() {
     }
   }, [playing, trackIndex]);
 
-  useEffect(() => {
+useEffect(() => {
     if (!timerRunning) return;
     if (remaining <= 0) return;
     const id = setInterval(() => {
@@ -261,6 +274,12 @@ export default function Page() {
         if (r <= 1) {
           setTimerRunning(false);
           setTimerDone(true);
+          setSessionCompletedTodos(
+            todosRef.current.filter(
+              (t) => t.done && !sessionStartDoneIds.current.includes(t.id)
+            )
+          );
+          setSummaryOpen(true);
           playChime();
           return 0;
         }
@@ -275,12 +294,44 @@ export default function Page() {
     setTrackIndex(i);
     setPlaying(true);
   }, []);
-  const nextTrack = useCallback(
-    () => setTrackIndex((i) => (i + 1) % TRACKS.length),
-    []
-  );
-  const prevTrack = useCallback(
-    () => setTrackIndex((i) => (i - 1 + TRACKS.length) % TRACKS.length),
+  const pickRandom = useCallback((exclude: number) => {
+    if (TRACKS.length <= 1) return exclude;
+    let i = exclude;
+    while (i === exclude) i = Math.floor(Math.random() * TRACKS.length);
+    return i;
+  }, []);
+  const nextTrack = useCallback(() => {
+    if (shuffle) setTrackIndex((i) => pickRandom(i));
+    else setTrackIndex((i) => (i + 1) % TRACKS.length);
+  }, [shuffle, pickRandom]);
+  const prevTrack = useCallback(() => {
+    if (shuffle) setTrackIndex((i) => pickRandom(i));
+    else setTrackIndex((i) => (i - 1 + TRACKS.length) % TRACKS.length);
+  }, [shuffle, pickRandom]);
+  const handleEnded = useCallback(() => {
+    if (repeat === "one") {
+      const audio = audioRef.current;
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(() => setPlaying(false));
+      }
+      return;
+    }
+    if (repeat === "off" && trackIndex === TRACKS.length - 1) {
+      setPlaying(false);
+      return;
+    }
+    if (shuffle) {
+      setTrackIndex((i) => pickRandom(i));
+      setPlaying(true);
+    } else {
+      setTrackIndex((i) => (i + 1) % TRACKS.length);
+    }
+  }, [repeat, shuffle, trackIndex, pickRandom]);
+  const toggleShuffle = useCallback(() => setShuffle((s) => !s), []);
+  const toggleRepeat = useCallback(
+    () =>
+      setRepeat((r) => (r === "off" ? "all" : r === "all" ? "one" : "off")),
     []
   );
 
@@ -289,15 +340,24 @@ export default function Page() {
     setRemaining(seconds);
     setTimerRunning(false);
     setTimerDone(false);
+    setSummaryOpen(false);
+    setSessionCompletedTodos([]);
+    sessionStartDoneIds.current = [];
   }, []);
   const toggleTimer = useCallback(() => {
     if (timerDone) return;
-    setTimerRunning((r) => !r);
-  }, [timerDone]);
+    setTimerRunning((r) => {
+      if (!r) sessionStartDoneIds.current = todos.filter((t) => t.done).map((t) => t.id);
+      return !r;
+    });
+  }, [timerDone, todos]);
   const resetTimer = useCallback(() => {
     setTimerRunning(false);
     setTimerDone(false);
     setRemaining(timerDuration);
+    setSummaryOpen(false);
+    setSessionCompletedTodos([]);
+    sessionStartDoneIds.current = [];
   }, [timerDuration]);
 
   const addTodo = useCallback((text: string) => {
@@ -327,7 +387,7 @@ export default function Page() {
     setStage("mood");
   }, [selectedTheme]);
 
-  const handleMoodNext = useCallback(() => {
+const handleMoodNext = useCallback(() => {
     if (!selectedMood) return;
     setStage("player");
     setPlaying(true);
@@ -363,13 +423,17 @@ export default function Page() {
         )}
       </AnimatePresence>
 
-      <audio
+<audio
         ref={audioRef}
         src={TRACKS[trackIndex].src}
         preload="auto"
+        onLoadStart={() => setLoading(true)}
+        onWaiting={() => setLoading(true)}
+        onCanPlay={() => setLoading(false)}
+        onPlaying={() => setLoading(false)}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-        onEnded={nextTrack}
+        onEnded={handleEnded}
       />
 
       <section className="relative h-dvh overflow-hidden overscroll-none bg-sky-night">
@@ -409,7 +473,16 @@ export default function Page() {
                   text="Sikozy"
                   className="absolute inset-0 inline-block font-playfair text-6xl leading-[0.9] tracking-[-0.03em] md:text-8xl"
                 />
-              </span>
+</span>
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={introDone ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.7, delay: 0.8, ease: EASE }}
+              className="mt-5 text-center font-playfair text-sm italic tracking-wide text-white/50 md:text-lg"
+            >
+              lofi hiphop for your soul
             </motion.p>
 
             <motion.button
@@ -788,9 +861,89 @@ export default function Page() {
 volume={volume}
                     onVolumeChange={setVolume}
                     theme={selectedTheme ?? "classic"}
+                    shuffle={shuffle}
+                    repeat={repeat}
+                    loading={loading}
+                    onToggleShuffle={toggleShuffle}
+                    onToggleRepeat={toggleRepeat}
                   />
                 </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      <AnimatePresence>
+          {summaryOpen && selectedMood === "study" && (
+            <motion.div
+              key="summary"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-6"
+            >
+              <motion.div
+                initial={{ scale: 0.94, y: 12, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.94, y: 12, opacity: 0 }}
+                transition={{ duration: 0.35, ease: EASE }}
+                className="liquid-glass w-full max-w-sm rounded-3xl p-6 text-center md:p-8"
+                style={
+                  {
+                    "--panel":
+                      selectedTheme === "light"
+                        ? "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(240,236,255,0.96))"
+                        : "linear-gradient(180deg, rgba(18,24,46,0.98), rgba(10,16,32,0.94))",
+                  } as React.CSSProperties
+                }
+              >
+                <p className="text-xs uppercase tracking-widest text-[var(--txt-faint)]">
+                  Session complete
+                </p>
+                <p className="mt-2 font-playfair text-2xl italic tracking-tight text-[var(--acc)] md:text-3xl">
+                  {Math.round(timerDuration / 60)} minutes focused
+                </p>
+
+                {sessionCompletedTodos.length > 0 ? (
+                  <>
+                    <p className="mt-5 text-xs uppercase tracking-widest text-[var(--txt-faint)]">
+                      Tasks completed this session
+                    </p>
+                    <ul className="mt-3 flex flex-col gap-2">
+                      {sessionCompletedTodos.map((t) => (
+                        <li
+                          key={t.id}
+                          className="flex items-center gap-2 rounded-xl bg-[var(--chip)] px-3 py-2 text-left text-sm text-[var(--txt)] ring-1 ring-[var(--ring)]"
+                        >
+                          <Check size={14} className="shrink-0 text-[var(--acc)]" />
+                          <span className="truncate">{t.text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="mt-4 text-sm text-[var(--txt-soft)]">
+                    No tasks completed this session — next time!
+                  </p>
+                )}
+
+                <div className="mt-6 flex justify-center gap-3">
+                  <button
+                    onClick={() => setSummaryOpen(false)}
+                    className="rounded-full bg-[var(--chip)] px-5 py-2 text-sm font-medium text-[var(--txt-soft)] ring-1 ring-[var(--ring)] transition-colors hover:text-[var(--txt)]"
+                  >
+                    Nice
+                  </button>
+                  <button
+                    onClick={() => {
+                      resetTimer();
+                    }}
+                    className="rounded-full bg-gradient-to-br from-[var(--acc-from)] via-[var(--acc-mid)] to-[var(--acc-to)] px-5 py-2 text-sm font-medium text-[var(--acc-txt)] shadow-[0_8px_24px_var(--glow)] transition-transform hover:scale-105"
+                  >
+                    Start again
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
