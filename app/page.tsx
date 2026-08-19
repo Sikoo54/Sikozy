@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Disc3,
   ListTodo,
   Music,
   Timer,
@@ -26,6 +27,7 @@ const DARK_VIDEO_URL =
 const LIGHT_VIDEO_URL =
   "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260324_151826_c7218672-6e92-402c-9e45-f1e0f454bdc4.mp4";
 
+// Daftar lagu lokal di public/audio
 const TRACKS: Track[] = [
   {
     title: "Luv (sic) pt2 Instrumentals",
@@ -68,6 +70,7 @@ const STORAGE_KEY = "sikozy-todos";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
+// Palet warna UI (CSS vars) per theme: classic/dark (gold) & light (ungu) — dipakai panel, teks, aksen, tombol
 const THEME_VARS: Record<ThemeKey, Record<string, string>> = {
   classic: {
     "--panel": "rgba(10,16,32,0.45)",
@@ -150,6 +153,7 @@ type Stage = "home" | "theme" | "mood" | "player";
 type ThemeKey = "classic" | "dark" | "light";
 type MoodKey = "chill" | "study";
 
+// Opsi theme (video background) yang bisa dipilih user
 const THEMES: {
   key: ThemeKey;
   label: string;
@@ -180,6 +184,7 @@ const THEMES: {
   },
 ];
 
+// Opsi mood: chill (musik saja) vs study (timer + todo)
 const MOODS: {
   key: MoodKey;
   title: string;
@@ -203,16 +208,18 @@ const MOODS: {
 ];
 
 export default function Page() {
+  // Stage navigasi: home -> theme -> mood -> player
   const [introDone, setIntroDone] = useState(false);
   const [stage, setStage] = useState<Stage>("home");
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey | null>(null);
   const [themeVideo, setThemeVideo] = useState(HERO_VIDEO_URL);
   const [selectedMood, setSelectedMood] = useState<MoodKey | null>(null);
+  // Panel timer & todo collapsible (khusus mobile)
   const [showMobileTimer, setShowMobileTimer] = useState(false);
   const [showMobileTodo, setShowMobileTodo] = useState(false);
 
-const audioRef = useRef<HTMLAudioElement>(null);
-
+  // State audio player
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [trackIndex, setTrackIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -222,6 +229,7 @@ const audioRef = useRef<HTMLAudioElement>(null);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState<"off" | "one" | "all">("all");
 
+  // Todo list (persist di localStorage)
   const [todos, setTodos] = useState<Todo[]>(() => {
     if (typeof window === "undefined") return [];
     try {
@@ -232,7 +240,8 @@ const audioRef = useRef<HTMLAudioElement>(null);
     }
   });
 
-const [timerDuration, setTimerDuration] = useState(25 * 60);
+  // State timer focus + data ringkasan sesi (todo yang selesai selama sesi berjalan)
+  const [timerDuration, setTimerDuration] = useState(25 * 60);
   const [remaining, setRemaining] = useState(25 * 60);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerDone, setTimerDone] = useState(false);
@@ -246,16 +255,19 @@ const [timerDuration, setTimerDuration] = useState(25 * 60);
   const [sessionCompletedTodos, setSessionCompletedTodos] = useState<Todo[]>([]);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
+// Simpan todo ke localStorage setiap berubah
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
   }, [todos]);
 
+  // Terapkan volume ke elemen audio
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = volume;
   }, [volume]);
 
+  // Play/pause audio; ulangi saat ganti lagu (trackIndex)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -266,7 +278,8 @@ const [timerDuration, setTimerDuration] = useState(25 * 60);
     }
   }, [playing, trackIndex]);
 
-useEffect(() => {
+  // Hitung mundur timer; saat selesai: kumpulkan todo yang selesai sesi ini + buka ringkasan
+  useEffect(() => {
     if (!timerRunning) return;
     if (remaining <= 0) return;
     const id = setInterval(() => {
@@ -290,10 +303,12 @@ useEffect(() => {
   }, [timerRunning, remaining]);
 
   const togglePlay = useCallback(() => setPlaying((p) => !p), []);
+  // Pilih lagu tertentu (dari tracklist)
   const selectTrack = useCallback((i: number) => {
     setTrackIndex(i);
     setPlaying(true);
   }, []);
+  // Pilih index acak selain lagu sekarang (untuk mode shuffle)
   const pickRandom = useCallback((exclude: number) => {
     if (TRACKS.length <= 1) return exclude;
     let i = exclude;
@@ -304,10 +319,12 @@ useEffect(() => {
     if (shuffle) setTrackIndex((i) => pickRandom(i));
     else setTrackIndex((i) => (i + 1) % TRACKS.length);
   }, [shuffle, pickRandom]);
+  // Lagu sebelumnya (shuffle = acak, biasa = mundur 1)
   const prevTrack = useCallback(() => {
     if (shuffle) setTrackIndex((i) => pickRandom(i));
     else setTrackIndex((i) => (i - 1 + TRACKS.length) % TRACKS.length);
   }, [shuffle, pickRandom]);
+  // Perilaku saat lagu selesai: repeat-one = ulang; off = berhenti di lagu terakhir; shuffle = acak; else lanjut
   const handleEnded = useCallback(() => {
     if (repeat === "one") {
       const audio = audioRef.current;
@@ -335,6 +352,7 @@ useEffect(() => {
     []
   );
 
+  // Atur durasi timer (preset/custom) + reset semua state sesi
   const setTimerDurationSafe = useCallback((seconds: number) => {
     setTimerDuration(seconds);
     setRemaining(seconds);
@@ -344,6 +362,7 @@ useEffect(() => {
     setSessionCompletedTodos([]);
     sessionStartDoneIds.current = [];
   }, []);
+  // Start/pause timer; snapshot todo yang sudah done saat mulai (untuk ringkasan sesi)
   const toggleTimer = useCallback(() => {
     if (timerDone) return;
     setTimerRunning((r) => {
@@ -351,6 +370,7 @@ useEffect(() => {
       return !r;
     });
   }, [timerDone, todos]);
+  // Reset timer ke durasi penuh (juga menutup ringkasan sesi)
   const resetTimer = useCallback(() => {
     setTimerRunning(false);
     setTimerDone(false);
@@ -360,6 +380,7 @@ useEffect(() => {
     sessionStartDoneIds.current = [];
   }, [timerDuration]);
 
+  // CRUD todo: tambah, tandai selesai/belum, hapus
   const addTodo = useCallback((text: string) => {
     setTodos((prev) => [
       ...prev,
@@ -387,7 +408,8 @@ useEffect(() => {
     setStage("mood");
   }, [selectedTheme]);
 
-const handleMoodNext = useCallback(() => {
+// Lanjut dari mood picker -> player (musik mulai otomatis, karena klik = gesture user)
+  const handleMoodNext = useCallback(() => {
     if (!selectedMood) return;
     setStage("player");
     setPlaying(true);
@@ -395,6 +417,7 @@ const handleMoodNext = useCallback(() => {
 
   return (
     <>
+      {/* Intro overlay: "Sikozy" muncul sebentar lalu fade out */}
       <AnimatePresence>
         {!introDone && (
           <motion.div
@@ -423,7 +446,8 @@ const handleMoodNext = useCallback(() => {
         )}
       </AnimatePresence>
 
-<audio
+{/* Elemen audio global (satu untuk semua stage); event mengisi state loading/durasi/ended */}
+  <audio
         ref={audioRef}
         src={TRACKS[trackIndex].src}
         preload="auto"
@@ -442,6 +466,7 @@ const handleMoodNext = useCallback(() => {
           theme={selectedTheme ?? "classic"}
         />
 
+        {/* Video background theme (tersembunyi saat pilih theme/mood, biar awan tetap kelihatan) */}
         <motion.video
           key={themeVideo}
           src={themeVideo}
@@ -454,6 +479,7 @@ const handleMoodNext = useCallback(() => {
           playsInline
         />
 
+        {/* STAGE HOME: judul Sikozy (gradient gold + shiny) + tagline + tombol Play music */}
         {stage === "home" && (
           <motion.div
             key="home"
@@ -476,30 +502,41 @@ const handleMoodNext = useCallback(() => {
 </span>
             </motion.p>
 
-            <motion.p
-              initial={{ opacity: 0, y: 16 }}
-              animate={introDone ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.7, delay: 0.8, ease: EASE }}
-              className="mt-5 text-center font-playfair text-sm italic tracking-wide text-white/50 md:text-lg"
-            >
-              lofi hiphop for your soul
-            </motion.p>
+            {/* Tagline + tombol CTA digabung di bawah (tidak menutupi video) */}
+            <div className="mb-16 flex flex-col items-center gap-4 md:mb-0 md:gap-6">
+              <motion.span
+                initial={{ opacity: 0, y: 16 }}
+                animate={introDone ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.7, delay: 0.8, ease: EASE }}
+                className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-1.5 ring-1 ring-white/10 backdrop-blur-md"
+              >
+                <Disc3
+                  size={12}
+                  strokeWidth={2.25}
+                  className="animate-[spin_8s_linear_infinite] text-[#e8c58f]"
+                />
+                <span className="bg-gradient-to-r from-[#f7ecd4] via-[#e8c58f] to-[#d9a05f] bg-clip-text pb-[0.15em] font-playfair text-sm italic tracking-wide text-transparent md:text-base">
+                  lofi hiphop for your soul
+                </span>
+              </motion.span>
 
-            <motion.button
-              onClick={() => setStage("theme")}
-              initial={{ opacity: 0, y: 20 }}
-              animate={introDone ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.7, delay: 0.65, ease: EASE }}
-              className="group mb-16 flex items-center gap-2 rounded-full bg-primary py-2 pl-6 pr-2 text-sm font-medium text-black shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all hover:gap-3 sm:text-base md:mb-0"
-            >
-              Play music
+              <motion.button
+                onClick={() => setStage("theme")}
+                initial={{ opacity: 0, y: 20 }}
+                animate={introDone ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.7, delay: 0.65, ease: EASE }}
+                className="group flex items-center gap-2 rounded-full bg-primary py-2 pl-6 pr-2 text-sm font-medium text-black shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all hover:gap-3 sm:text-base"
+              >
+                Play music
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
                 <ArrowRight size={18} className="text-primary" />
               </span>
             </motion.button>
+            </div>
           </motion.div>
         )}
 
+{/* STAGE THEME: pilih 1 dari 3 video theme; video utama disembunyikan (opacity-0) selama memilih */}
         <AnimatePresence>
           {stage === "theme" && (
             <motion.div
@@ -608,6 +645,7 @@ const handleMoodNext = useCallback(() => {
           )}
         </AnimatePresence>
 
+{/* STAGE MOOD: pilih Chill (musik saja) atau Study (timer + todo) */}
         <AnimatePresence>
           {stage === "mood" && (
             <motion.div
@@ -704,6 +742,7 @@ const handleMoodNext = useCallback(() => {
           )}
         </AnimatePresence>
 
+{/* STAGE PLAYER: tombol Customize & Back to home, panel timer/todo (desktop di samping video, mobile dropdown di atas player), audio bar di bawah */}
         <AnimatePresence>
           {stage === "player" && (
             <motion.div
@@ -730,6 +769,7 @@ const handleMoodNext = useCallback(() => {
                 Back to home
               </button>
 
+{/* Study mode desktop: timer di kiri video, todo di kanan video (jajar, tidak menutupi video) */}
               {selectedMood === "study" && (
                 <>
                   <div className="absolute left-4 top-1/2 z-20 hidden w-60 -translate-y-1/2 md:left-[calc((50%-min(448px,50vw)-288px)/2)] md:block md:w-72">
@@ -757,9 +797,11 @@ const handleMoodNext = useCallback(() => {
 
               <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-4 md:px-6 md:pb-6">
                 <div className="mx-auto w-full max-w-4xl space-y-2.5">
+{/* Study mode mobile: chip Timer & Todo membuka panel dropdown (bisa ditutup, animasi expand) */}
                   {selectedMood === "study" && (
                     <div className="md:hidden">
                       <div className="flex gap-2">
+                        {/* Chip toggle panel timer */}
                         <button
                           onClick={() => setShowMobileTimer((v) => !v)}
                           className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium ring-1 transition-all ${
@@ -845,6 +887,7 @@ const handleMoodNext = useCallback(() => {
                       </AnimatePresence>
                     </div>
                   )}
+                  {/* Audio player bottom bar (lihat components/player/AudioPlayer.tsx) */}
                   <AudioPlayer
                     tracks={TRACKS}
                     currentIndex={trackIndex}
@@ -872,6 +915,7 @@ volume={volume}
             </motion.div>
           )}
         </AnimatePresence>
+      {/* MODAL RINGKASAN SESI: muncul otomatis saat timer study selesai — durasi fokus + todo yang selesai sesi ini */}
       <AnimatePresence>
           {summaryOpen && selectedMood === "study" && (
             <motion.div
@@ -927,6 +971,7 @@ volume={volume}
                   </p>
                 )}
 
+                {/* Tombol aksi modal: Nice = tutup saja; Start again = reset timer untuk sesi baru */}
                 <div className="mt-6 flex justify-center gap-3">
                   <button
                     onClick={() => setSummaryOpen(false)}

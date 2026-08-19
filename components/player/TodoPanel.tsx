@@ -28,6 +28,7 @@ export default function TodoPanel({
 }) {
   const [text, setText] = useState("");
 
+  // Kirim form: tambah task (trim, kosong diabaikan)
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const trimmed = text.trim();
@@ -70,6 +71,7 @@ export default function TodoPanel({
         </div>
       </div>
 
+      {/* Kunci panel: jika timer belum jalan, tampilkan ajakan start — task hanya bisa diakses saat fokus */}
       {!timerActive ? (
         <div className="flex flex-col items-center gap-2 py-6 text-center md:gap-3 md:py-10">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--chip)] md:h-12 md:w-12">
@@ -82,6 +84,7 @@ export default function TodoPanel({
         </div>
       ) : (
         <>
+          {/* Form tambah task */}
           <form onSubmit={submit} className="flex gap-1.5 md:gap-2">
             <input
               type="text"
@@ -100,6 +103,7 @@ export default function TodoPanel({
             </button>
           </form>
 
+          {/* Daftar task: circle check (toggle selesai), teks dicoret saat done, X hapus (muncul saat hover) */}
           <ul className="mt-3 flex max-h-40 flex-col gap-1.5 overflow-y-auto pr-1 md:mt-5 md:max-h-64 md:gap-2">
             {todos.length === 0 && (
               <li className="py-4 text-center md:py-6">

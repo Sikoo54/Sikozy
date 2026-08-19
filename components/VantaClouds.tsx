@@ -7,6 +7,7 @@ import CLOUDS from "vanta/dist/vanta.clouds.min";
 
 export type CloudTheme = "classic" | "dark" | "light";
 
+// Palet warna awan per theme (classic = sky biru navy + awan emas; dark = malam; light = langit pastel)
 const PALETTES: Record<
   CloudTheme,
   { sky: number; cloud: number; shadow: number; sunlight: number }
@@ -40,6 +41,7 @@ export default function VantaClouds({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Inisialisasi Vanta Clouds sekali per theme; destroy saat theme berubah/unmount
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;

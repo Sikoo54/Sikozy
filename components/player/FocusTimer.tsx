@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { Pause, Play, RotateCcw, X } from "lucide-react";
 
+// Preset durasi (menit) & konstanta ring SVG
 const PRESETS = [15, 25, 50];
 const RING_RADIUS = 62;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -33,12 +34,14 @@ export default function FocusTimer({
   onReset: () => void;
   onClose?: () => void;
 }) {
+// Ring progres + status custom (aktif saat durasi bukan preset)
   const progress = duration > 0 ? remaining / duration : 0;
   const dashOffset = RING_CIRCUMFERENCE * (1 - progress);
   const [custom, setCustom] = useState("");
   const isCustomActive =
     !PRESETS.includes(duration / 60) && duration === Math.round(Number(custom) * 60) && custom !== "";
 
+  // Terapkan durasi custom (validasi 1–180 menit, Enter atau blur)
   const applyCustom = () => {
     const m = Number(custom);
     if (!Number.isFinite(m) || m <= 0 || m > 180) {
@@ -78,6 +81,7 @@ export default function FocusTimer({
         </div>
       </div>
 
+      {/* Ring SVG progres (gradient aksen; dashoffset mengikuti sisa waktu), angka di tengah */}
       <div className="relative mx-auto h-[120px] w-[120px] md:h-[148px] md:w-[148px]">
         <svg
           viewBox="0 0 148 148"
@@ -126,6 +130,7 @@ export default function FocusTimer({
         </div>
       </div>
 
+      {/* Pilihan durasi: preset 15/25/50m + input custom (pill) */}
       <div className="mt-4 flex justify-center gap-1.5 md:mt-6 md:gap-2.5">
         {PRESETS.map((minutes) => (
           <button
@@ -173,6 +178,7 @@ export default function FocusTimer({
         </label>
       </div>
 
+      {/* Tombol aksi: Start/Pause (nonaktif saat selesai) + Reset */}
       <div className="mt-4 flex items-center justify-center gap-2 md:mt-6 md:gap-3">
         <button
           onClick={onToggle}

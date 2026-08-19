@@ -10,6 +10,7 @@ export default function ShinyText({
   speed?: number;
   className?: string;
 }) {
+  // Overlay teks dengan kilau putih yang bergerak (gradient + animasi shiny-text dari index.css)
   return (
     <span
       aria-hidden

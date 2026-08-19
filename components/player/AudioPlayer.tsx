@@ -29,6 +29,7 @@ function formatTime(seconds: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+// Bar equalizer animasi (3 garis naik-turun) — penanda lagu sedang diputar
 function EqualizerBars() {
   return (
     <span className="flex h-3 items-end gap-[2px]">
@@ -49,6 +50,7 @@ function EqualizerBars() {
   );
 }
 
+// Spinner kecil — tampil saat audio masih buffer/memuat
 function LoadingSpinner() {
   return (
     <motion.span
@@ -99,7 +101,9 @@ export default function AudioPlayer({
   onSelect?: (index: number) => void;
 }) {
   const track = tracks[currentIndex];
+  // Panel judul lengkap (buka saat judul diklik) — khusus untuk judul yang terpotong
   const [expandedTitle, setExpandedTitle] = useState(false);
+  // Panel tracklist (buka/tutup via ikon list)
   const [listOpen, setListOpen] = useState(false);
   const isLight = theme === "light";
   const panelStyle = {
@@ -232,6 +236,7 @@ export default function AudioPlayer({
           </p>
         </div>
 
+        {/* Grup kontrol tengah: shuffle, prev, play/pause (tombol utama), next, repeat (badge "1" saat repeat-one) */}
         <div className="flex shrink-0 items-center justify-center gap-1 md:gap-2">
           <button
             onClick={onToggleShuffle}
@@ -283,6 +288,7 @@ export default function AudioPlayer({
           </button>
         </div>
 
+        {/* Kolom kanan: tombol tracklist + slider volume */}
         <div className="flex w-full shrink-0 items-center justify-center gap-1.5 sm:gap-2">
           <button
             onClick={() => setListOpen((v) => !v)}
