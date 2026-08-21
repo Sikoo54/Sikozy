@@ -13,6 +13,14 @@ body {
   overscroll-behavior: none;
 }
 
+/* Sembunyikan cursor native di desktop (diganti kursor kustom); sentuh tetap normal */
+@media (pointer: fine) {
+  body,
+  body * {
+    cursor: none !important;
+  }
+}
+
 body {
   background-color: #0a1020;
   color: #fff;

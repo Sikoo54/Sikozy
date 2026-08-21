@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import "./index.css";
 import "lenis/dist/lenis.css";
 import SmoothScroll from "@/components/SmoothScroll";
+import CustomCursor from "@/components/CustomCursor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-black">
         <SmoothScroll />
+        <CustomCursor />
         {children}
       </body>
     </html>
