@@ -417,31 +417,93 @@ export default function Page() {
 
   return (
     <>
-      {/* Intro overlay: "Sikozy" muncul sebentar lalu fade out */}
+      {/* INTRO OVERLAY: piringan vinyl + huruf "Sikozy" naik satu-satu + garis + tagline, lalu fade out */}
       <AnimatePresence>
         {!introDone && (
           <motion.div
             key="intro"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-black md:gap-7"
             initial={{ opacity: 1 }}
             animate={{ opacity: 0 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, delay: 1.4, ease: "easeInOut" }}
+            transition={{ duration: 0.9, delay: 2.7, ease: "easeInOut" }}
             onAnimationStart={() => setIntroDone(true)}
             onAnimationComplete={() => setIntroDone(true)}
           >
-            <motion.span
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: EASE }}
-              className="relative inline-block pb-[0.18em] font-playfair text-6xl tracking-[-0.02em] text-primary md:text-8xl"
+            {/* Piringan vinyl berputar dengan label emas "S" */}
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, rotate: -40 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              transition={{ duration: 0.8, ease: EASE }}
+              className="relative h-20 w-20 md:h-24 md:w-24"
             >
-              Sikozy
+              <div className="absolute inset-0 animate-[spin_3s_linear_infinite] rounded-full shadow-[0_0_40px_rgba(232,197,143,0.25)]">
+                <div
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background:
+                      "repeating-radial-gradient(circle at center, #181233 0px, #2a2050 1.5px, #181233 3px)",
+                  }}
+                />
+                {/* Kilau cahaya menyapu permukaan disc */}
+                <div className="absolute inset-0 rounded-full bg-[linear-gradient(120deg,transparent_35%,rgba(255,255,255,0.08)_50%,transparent_65%)]" />
+                {/* Label emas */}
+                <div className="absolute inset-[30%] flex items-center justify-center rounded-full bg-gradient-to-br from-[#f7ecd4] via-[#e8c58f] to-[#d9a05f]">
+                  <span className="-mt-[0.08em] font-playfair text-xl italic text-[#241b45] md:text-2xl">
+                    S
+                  </span>
+                </div>
+                <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#181233]" />
+              </div>
+            </motion.div>
+
+            {/* Huruf "Sikozy" naik dari bawah satu per satu + shiny sweep */}
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.01, delay: 0.3 }}
+              className="relative inline-block overflow-hidden pb-[0.18em]"
+            >
+              <span className="flex">
+                {"Sikozy".split("").map((ch, i) => (
+                  <motion.span
+                    key={i}
+                    initial={{ y: "115%" }}
+                    animate={{ y: 0 }}
+                    transition={{
+                      duration: 0.65,
+                      delay: 0.35 + i * 0.07,
+                      ease: EASE,
+                    }}
+                    className="bg-gradient-to-br from-[#f7ecd4] via-[#e8c58f] to-[#d9a05f] bg-clip-text font-playfair text-6xl leading-none tracking-[-0.03em] text-transparent md:text-8xl"
+                  >
+                    {ch}
+                  </motion.span>
+                ))}
+              </span>
               <ShinyText
                 text="Sikozy"
-                className="absolute inset-0 inline-block font-playfair text-6xl tracking-[-0.02em] md:text-8xl"
+                className="absolute inset-0 inline-block font-playfair text-6xl leading-none tracking-[-0.03em] md:text-8xl"
               />
             </motion.span>
+
+            {/* Garis emas memanjang */}
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 64, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 1.25, ease: EASE }}
+              className="h-px bg-gradient-to-r from-transparent via-[#e8c58f]/70 to-transparent"
+            />
+
+            {/* Tagline kecil */}
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.45, ease: EASE }}
+              className="font-playfair text-sm italic tracking-wide text-white/50 md:text-base"
+            >
+              lofi hiphop for your soul
+            </motion.p>
           </motion.div>
         )}
       </AnimatePresence>
