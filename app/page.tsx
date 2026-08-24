@@ -518,7 +518,7 @@ export default function Page() {
   <audio
         ref={audioRef}
         src={TRACKS[trackIndex].src}
-        preload="auto"
+        preload="metadata"
         onLoadStart={() => setLoading(true)}
         onWaiting={() => setLoading(true)}
         onCanPlay={() => setLoading(false)}
@@ -529,10 +529,20 @@ export default function Page() {
       />
 
       <section className="relative h-dvh overflow-hidden overscroll-none bg-sky-night">
-        <VantaClouds
-          className="pointer-events-none absolute inset-0"
-          theme={selectedTheme ?? "classic"}
-        />
+        {/* Background awan: baru mount setelah intro selesai (overlay intro kan hitam solid) — three.js/Vanta tidak membebani load awal */}
+        {introDone && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="absolute inset-0"
+          >
+            <VantaClouds
+              className="pointer-events-none absolute inset-0"
+              theme={selectedTheme ?? "classic"}
+            />
+          </motion.div>
+        )}
 
         {/* Video background theme (tersembunyi saat pilih theme/mood, biar awan tetap kelihatan) */}
         <motion.video
