@@ -105,6 +105,8 @@ export default function AudioPlayer({
   const [expandedTitle, setExpandedTitle] = useState(false);
   // Panel tracklist (buka/tutup via ikon list)
   const [listOpen, setListOpen] = useState(false);
+  // Volume slider mobile: tersembunyi sampai ikon volume diklik
+  const [volOpen, setVolOpen] = useState(false);
   const isLight = theme === "light";
   const panelStyle = {
     "--panel": isLight
@@ -315,7 +317,18 @@ export default function AudioPlayer({
           >
             <ListMusic size={16} />
           </button>
-          <Volume2 size={16} className="shrink-0 text-[var(--txt-faint)]" />
+          {/* Volume: mobile = ikon toggle (slider muncul saat diklik); desktop = slider selalu tampil */}
+          <button
+            onClick={() => setVolOpen((v) => !v)}
+            aria-label="Toggle volume"
+            className={`rounded-full p-1 transition-colors md:pointer-events-none ${
+              volOpen
+                ? "text-[var(--txt)]"
+                : "text-[var(--txt-faint)] hover:text-[var(--txt)]"
+            }`}
+          >
+            <Volume2 size={16} />
+          </button>
           <input
             type="range"
             min={0}
@@ -323,7 +336,9 @@ export default function AudioPlayer({
             step={0.01}
             value={volume}
             onChange={(e) => onVolumeChange(Number(e.target.value))}
-            className="w-14 [accent-color:var(--acc)] sm:w-24 md:w-28"
+            className={`${
+              volOpen ? "block w-14" : "hidden"
+            } sm:w-20 md:!block md:w-28 [accent-color:var(--acc)]`}
             aria-label="Volume"
           />
         </div>
