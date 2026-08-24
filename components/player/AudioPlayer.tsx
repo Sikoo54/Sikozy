@@ -218,11 +218,11 @@ export default function AudioPlayer({
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
         <div className="flex min-w-0 items-center gap-2.5 md:gap-3">
-          {/* Tombol tracklist — sekarang di kiri, bersebelahan dengan judul */}
+          {/* Tombol tracklist — desktop: di kiri samping judul; (mobile pindah ke kolom kanan biar muat) */}
           <button
             onClick={() => setListOpen((v) => !v)}
             aria-label="Open tracklist"
-            className={`shrink-0 rounded-full p-2 transition-colors ring-1 ${
+            className={`hidden shrink-0 rounded-full p-2 transition-colors ring-1 md:block ${
               listOpen
                 ? "text-[var(--acc)] ring-[var(--acc)]"
                 : "bg-[var(--chip)] text-[var(--txt-soft)] ring-[var(--ring)] hover:text-[var(--txt)]"
@@ -302,8 +302,19 @@ export default function AudioPlayer({
           </button>
         </div>
 
-        {/* Kolom kanan: slider volume */}
+        {/* Kolom kanan: slider volume (+ tombol tracklist versi mobile) */}
         <div className="flex w-full shrink-0 items-center justify-center gap-1.5 sm:gap-2">
+          <button
+            onClick={() => setListOpen((v) => !v)}
+            aria-label="Open tracklist"
+            className={`rounded-full p-1.5 transition-colors md:hidden ${
+              listOpen
+                ? "text-[var(--acc)]"
+                : "text-[var(--txt-soft)] hover:text-[var(--txt)]"
+            }`}
+          >
+            <ListMusic size={16} />
+          </button>
           <Volume2 size={16} className="shrink-0 text-[var(--txt-faint)]" />
           <input
             type="range"
