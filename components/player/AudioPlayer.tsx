@@ -317,30 +317,53 @@ export default function AudioPlayer({
           >
             <ListMusic size={16} />
           </button>
-          {/* Volume: mobile = ikon toggle (slider muncul saat diklik); desktop = slider selalu tampil */}
-          <button
-            onClick={() => setVolOpen((v) => !v)}
-            aria-label="Toggle volume"
-            className={`rounded-full p-1 transition-colors md:pointer-events-none ${
-              volOpen
-                ? "text-[var(--txt)]"
-                : "text-[var(--txt-faint)] hover:text-[var(--txt)]"
-            }`}
-          >
-            <Volume2 size={16} />
-          </button>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onChange={(e) => onVolumeChange(Number(e.target.value))}
-            className={`${
-              volOpen ? "block w-14" : "hidden"
-            } sm:w-20 md:!block md:w-28 [accent-color:var(--acc)]`}
-            aria-label="Volume"
-          />
+          {/* Volume: mobile = ikon toggle, slider muncul sebagai popover di ATAS player (tanpa menggeser layout); desktop = slider selalu tampil */}
+          <div className="relative flex items-center">
+            <button
+              onClick={() => setVolOpen((v) => !v)}
+              aria-label="Toggle volume"
+              className={`rounded-full p-1 transition-colors md:pointer-events-none ${
+                volOpen
+                  ? "text-[var(--txt)]"
+                  : "text-[var(--txt-faint)] hover:text-[var(--txt)]"
+              }`}
+            >
+              <Volume2 size={16} />
+            </button>
+            {volOpen && (
+              <motion.div
+                key="volume-pop"
+                initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="liquid-glass absolute bottom-full right-0 z-30 mb-3 flex items-center gap-2 rounded-full px-4 py-2.5 ring-1 ring-[var(--ring)] md:hidden"
+                style={panelStyle}
+              >
+                <Volume2 size={13} className="shrink-0 text-[var(--txt-faint)]" />
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={volume}
+                  onChange={(e) => onVolumeChange(Number(e.target.value))}
+                  className="w-24 [accent-color:var(--acc)]"
+                  aria-label="Volume"
+                />
+              </motion.div>
+            )}
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={volume}
+              onChange={(e) => onVolumeChange(Number(e.target.value))}
+              className="ml-1 hidden w-28 [accent-color:var(--acc)] md:block"
+              aria-label="Volume"
+            />
+          </div>
         </div>
       </div>
     </div>
