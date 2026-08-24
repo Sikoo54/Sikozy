@@ -217,23 +217,37 @@ export default function AudioPlayer({
       </AnimatePresence>
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-2.5 md:gap-3">
+          {/* Tombol tracklist — sekarang di kiri, bersebelahan dengan judul */}
           <button
-            onClick={() => setExpandedTitle((v) => !v)}
-            className="group flex max-w-full items-center gap-1.5 text-left"
+            onClick={() => setListOpen((v) => !v)}
+            aria-label="Open tracklist"
+            className={`shrink-0 rounded-full p-2 transition-colors ring-1 ${
+              listOpen
+                ? "text-[var(--acc)] ring-[var(--acc)]"
+                : "bg-[var(--chip)] text-[var(--txt-soft)] ring-[var(--ring)] hover:text-[var(--txt)]"
+            }`}
           >
-            <span className="font-playfair truncate text-base italic tracking-tight text-[var(--txt)] md:text-lg">
-              {track.title}
-            </span>
-            <Maximize2
-              size={12}
-              className="shrink-0 text-[var(--txt-faint)] transition-colors group-hover:text-[var(--acc)] md:hidden"
-            />
-            {loading ? <LoadingSpinner /> : playing ? <EqualizerBars /> : null}
+            <ListMusic size={16} />
           </button>
-          <p className="truncate text-xs text-[var(--txt-soft)]">
-            {track.artist}
-          </p>
+          <div className="min-w-0">
+            <button
+              onClick={() => setExpandedTitle((v) => !v)}
+              className="group flex max-w-full items-center gap-1.5 text-left"
+            >
+              <span className="font-playfair truncate text-base italic tracking-tight text-[var(--txt)] md:text-lg">
+                {track.title}
+              </span>
+              <Maximize2
+                size={12}
+                className="shrink-0 text-[var(--txt-faint)] transition-colors group-hover:text-[var(--acc)] md:hidden"
+              />
+              {loading ? <LoadingSpinner /> : playing ? <EqualizerBars /> : null}
+            </button>
+            <p className="truncate text-xs text-[var(--txt-soft)]">
+              {track.artist}
+            </p>
+          </div>
         </div>
 
         {/* Grup kontrol tengah: shuffle, prev, play/pause (tombol utama), next, repeat (badge "1" saat repeat-one) */}
@@ -288,19 +302,8 @@ export default function AudioPlayer({
           </button>
         </div>
 
-        {/* Kolom kanan: tombol tracklist + slider volume */}
+        {/* Kolom kanan: slider volume */}
         <div className="flex w-full shrink-0 items-center justify-center gap-1.5 sm:gap-2">
-          <button
-            onClick={() => setListOpen((v) => !v)}
-            aria-label="Open tracklist"
-            className={`rounded-full p-1.5 transition-colors ${
-              listOpen
-                ? "text-[var(--acc)]"
-                : "text-[var(--txt-soft)] hover:text-[var(--txt)]"
-            }`}
-          >
-            <ListMusic size={16} />
-          </button>
           <Volume2 size={16} className="shrink-0 text-[var(--txt-faint)]" />
           <input
             type="range"

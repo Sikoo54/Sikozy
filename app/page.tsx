@@ -457,35 +457,41 @@ export default function Page() {
               </div>
             </motion.div>
 
-            {/* Huruf "Sikozy" naik dari bawah satu per satu + shiny sweep */}
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.01, delay: 0.3 }}
-              className="relative inline-block overflow-hidden pb-[0.18em]"
-            >
-              <span className="flex">
-                {"Sikozy".split("").map((ch, i) => (
+            {/* Judul "Sikozy": huruf naik dari bawah satu per satu; tiap huruf bawa mask + ruang descender + shiny sendiri (anti terpotong, shiny sejajar) */}
+            <div className="flex">
+              {"Sikozy".split("").map((ch, i) => (
+                <span
+                  key={i}
+                  className="inline-block overflow-hidden pb-[0.22em] -mb-[0.14em]"
+                >
                   <motion.span
-                    key={i}
-                    initial={{ y: "115%" }}
+                    initial={{ y: "112%" }}
                     animate={{ y: 0 }}
                     transition={{
                       duration: 0.65,
                       delay: 0.35 + i * 0.07,
                       ease: EASE,
                     }}
-                    className="bg-gradient-to-br from-[#f7ecd4] via-[#e8c58f] to-[#d9a05f] bg-clip-text font-playfair text-6xl leading-none tracking-[-0.03em] text-transparent md:text-8xl"
+                    className="relative inline-block bg-gradient-to-br from-[#f7ecd4] via-[#e8c58f] to-[#d9a05f] bg-clip-text pb-[0.18em] font-playfair text-6xl leading-[0.9] tracking-[-0.03em] text-transparent drop-shadow-[0_2px_20px_rgba(217,160,95,0.3)] md:text-8xl"
                   >
                     {ch}
+                    {/* Shiny sweep per huruf — box sama persis dengan hurufnya */}
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 inline-block bg-clip-text pb-[0.18em] font-playfair text-6xl leading-[0.9] tracking-[-0.03em] text-transparent md:text-8xl"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(120deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.95) 50%, rgba(255,255,255,0) 60%)",
+                        backgroundSize: "200% 100%",
+                        animation: "shiny-text 3.5s linear infinite",
+                      }}
+                    >
+                      {ch}
+                    </span>
                   </motion.span>
-                ))}
-              </span>
-              <ShinyText
-                text="Sikozy"
-                className="absolute inset-0 inline-block font-playfair text-6xl leading-none tracking-[-0.03em] md:text-8xl"
-              />
-            </motion.span>
+                </span>
+              ))}
+            </div>
 
             {/* Garis emas memanjang */}
             <motion.div
