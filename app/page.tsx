@@ -586,14 +586,14 @@ export default function Page() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={introDone ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, delay: 0.8, ease: EASE }}
-                className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-1.5 ring-1 ring-white/10 backdrop-blur-md"
+                className="flex items-center gap-2 rounded-full bg-white/[0.08] px-5 py-2 ring-1 ring-white/[0.12] backdrop-blur-md"
               >
                 <Disc3
-                  size={12}
+                  size={14}
                   strokeWidth={2.25}
                   className="animate-[spin_8s_linear_infinite] text-[#e8c58f]"
                 />
-                <span className="bg-gradient-to-r from-[#f7ecd4] via-[#e8c58f] to-[#d9a05f] bg-clip-text pb-[0.15em] font-playfair text-sm italic tracking-wide text-transparent md:text-base">
+                <span className="font-playfair text-base italic tracking-wide text-white/70 md:text-lg">
                   lofi hiphop for your soul
                 </span>
               </motion.span>
