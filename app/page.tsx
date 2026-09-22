@@ -251,6 +251,14 @@ export default function Page() {
     todosRef.current = todos;
   }, [todos]);
 
+  // Deadline absolut timer (timestamp ms) — tidak terpengaruh throttle tab background
+  const endAtRef = useRef<number | null>(null);
+  // Cermin nilai remaining terbaru (untuk init deadline tanpa re-run efek)
+  const remainingRef = useRef(remaining);
+  useEffect(() => {
+    remainingRef.current = remaining;
+  }, [remaining]);
+
   const sessionStartDoneIds = useRef<string[]>([]);
   const [sessionCompletedTodos, setSessionCompletedTodos] = useState<Todo[]>([]);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -278,29 +286,40 @@ export default function Page() {
     }
   }, [playing, trackIndex]);
 
-  // Hitung mundur timer; saat selesai: kumpulkan todo yang selesai sesi ini + buka ringkasan
+  // Selesaikan sesi: stop, tandai done, kumpulkan todo yang selesai sesi ini, buka ringkasan + chime
+  const finishSession = useCallback(() => {
+    endAtRef.current = null;
+    setTimerRunning(false);
+    setRemaining(0);
+    setTimerDone(true);
+    setSessionCompletedTodos(
+      todosRef.current.filter(
+        (t) => t.done && !sessionStartDoneIds.current.includes(t.id)
+      )
+    );
+    setSummaryOpen(true);
+    playChime();
+  }, []);
+
+  // Hitung mundur berbasis deadline timestamp (tick 250ms); akurat walau tab di-background
   useEffect(() => {
-    if (!timerRunning) return;
-    if (remaining <= 0) return;
+    if (!timerRunning) {
+      endAtRef.current = null;
+      return;
+    }
+    if (endAtRef.current === null) {
+      endAtRef.current = Date.now() + remainingRef.current * 1000;
+    }
     const id = setInterval(() => {
-      setRemaining((r) => {
-        if (r <= 1) {
-          setTimerRunning(false);
-          setTimerDone(true);
-          setSessionCompletedTodos(
-            todosRef.current.filter(
-              (t) => t.done && !sessionStartDoneIds.current.includes(t.id)
-            )
-          );
-          setSummaryOpen(true);
-          playChime();
-          return 0;
-        }
-        return r - 1;
-      });
-    }, 1000);
+      const left = Math.max(
+        0,
+        Math.round(((endAtRef.current ?? Date.now()) - Date.now()) / 1000)
+      );
+      setRemaining(left);
+      if (left <= 0) finishSession();
+    }, 250);
     return () => clearInterval(id);
-  }, [timerRunning, remaining]);
+  }, [timerRunning, finishSession]);
 
   const togglePlay = useCallback(() => setPlaying((p) => !p), []);
   // Pilih lagu tertentu (dari tracklist)
@@ -354,6 +373,8 @@ export default function Page() {
 
   // Atur durasi timer (preset/custom) + reset semua state sesi
   const setTimerDurationSafe = useCallback((seconds: number) => {
+    endAtRef.current = null;
+    remainingRef.current = seconds;
     setTimerDuration(seconds);
     setRemaining(seconds);
     setTimerRunning(false);
@@ -372,6 +393,8 @@ export default function Page() {
   }, [timerDone, todos]);
   // Reset timer ke durasi penuh (juga menutup ringkasan sesi)
   const resetTimer = useCallback(() => {
+    endAtRef.current = null;
+    remainingRef.current = timerDuration;
     setTimerRunning(false);
     setTimerDone(false);
     setRemaining(timerDuration);
